@@ -1,0 +1,1659 @@
+version: 2.1
+
+jobs:
+  compile_build-nightly-integration-tests:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - run:
+          name: light speed
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; uname -mnrs; true ; } > /tmp/stage/output.out
+            echo "gate build-nightly-integration-tests: $(wc -c </tmp/stage/output.out) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - output.out
+  build-nightly-integration-tests:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: Verify previous
+          command: |
+            cat /tmp/stage/output.out
+      - run:
+          name: Get source tree
+          command: git clone --depth 1 --filter=tree:0 --no-tags https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME.git .
+      - run:
+          name: Extract archive
+          command: tar --extract --xz -f archive.tar.xz
+      - run:
+          name: Store metadata
+          no_output_timeout: 15m
+          command: sleep 90
+      - run:
+          no_output_timeout: 71m
+          command: "./adapter"
+  A_produce-production-test-matrix:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: almost
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; awk 'BEGIN{for(i=1;i<=5;i++){print i; print i*i}}' | wc -l; true ; } > /tmp/stage/phase-done.log
+            echo "gate produce-production-test-matrix: $(wc -c </tmp/stage/phase-done.log) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - phase-done.log
+  produce-production-test-matrix:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: Verify previous
+          command: |
+            cat /tmp/stage/phase-done.log
+      - run:
+          name: Get source tree
+          command: git clone --depth 1 --filter=tree:0 --no-tags https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME.git .
+      - run:
+          name: Extract archive
+          command: tar --extract --xz -f archive.tar.xz
+      - run:
+          name: Store metadata
+          no_output_timeout: 15m
+          command: sleep 90
+      - run:
+          no_output_timeout: 71m
+          command: "./adapter"
+  spin_deploy:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: hidden line
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; ps -eo pid,ppid 2>/dev/null | wc -l; true ; } > /tmp/stage/output.log
+            echo "gate deploy: $(wc -c </tmp/stage/output.log) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - output.log
+  deploy:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: Verify previous
+          command: |
+            cat /tmp/stage/output.log
+      - run:
+          name: Get source tree
+          command: git clone --depth 1 --filter=tree:0 --no-tags https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME.git .
+      - run:
+          name: Extract archive
+          command: tar --extract --xz -f archive.tar.xz
+      - run:
+          name: Store metadata
+          no_output_timeout: 15m
+          command: sleep 90
+      - run:
+          no_output_timeout: 71m
+          command: "./adapter"
+  hydrate_BUILD_DEV:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: decrescendo
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; echo 'a:b:c:d:e' | awk -F: '{print NF}'; true ; } > /tmp/stage/560v2.txt
+            echo "gate BUILD_DEV: $(wc -c </tmp/stage/560v2.txt) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - 560v2.txt
+  BUILD_DEV:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: Verify previous
+          command: |
+            cat /tmp/stage/560v2.txt
+      - run:
+          name: Get source tree
+          command: git clone --depth 1 --filter=tree:0 --no-tags https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME.git .
+      - run:
+          name: Extract archive
+          command: tar --extract --xz -f archive.tar.xz
+      - run:
+          name: Store metadata
+          no_output_timeout: 15m
+          command: sleep 90
+      - run:
+          no_output_timeout: 71m
+          command: "./adapter"
+  deps_send-it:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: conventional pull
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; printf "x %s\n" red green blue; true ; } > /tmp/stage/relay.state
+            echo "gate send-it: $(wc -c </tmp/stage/relay.state) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - relay.state
+  send-it:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: Verify previous
+          command: |
+            cat /tmp/stage/relay.state
+      - run:
+          name: Get source tree
+          command: git clone --depth 1 --filter=tree:0 --no-tags https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME.git .
+      - run:
+          name: Extract archive
+          command: tar --extract --xz -f archive.tar.xz
+      - run:
+          name: Store metadata
+          no_output_timeout: 15m
+          command: sleep 90
+      - run:
+          no_output_timeout: 71m
+          command: "./adapter"
+  deps_Prepare_Tests7:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: rub
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; echo "abcdef" | fold -w2; true ; } > /tmp/stage/79.log
+            echo "gate Prepare_Tests7: $(wc -c </tmp/stage/79.log) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - 79.log
+  Prepare_Tests7:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: Verify previous
+          command: |
+            cat /tmp/stage/79.log
+      - run:
+          name: Get source tree
+          command: git clone --depth 1 --filter=tree:0 --no-tags https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME.git .
+      - run:
+          name: Extract archive
+          command: tar --extract --xz -f archive.tar.xz
+      - run:
+          name: Store metadata
+          no_output_timeout: 15m
+          command: sleep 90
+      - run:
+          no_output_timeout: 71m
+          command: "./adapter"
+  generate_DATA-623:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - run:
+          name: ping intern
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; seq 1 50 | awk 'BEGIN{OFS=","}{row=row OFS $0}END{sub(/^,/,"",row); print row}' | wc -c; true ; } > /tmp/stage/trace.txt
+            echo "gate DATA-623: $(wc -c </tmp/stage/trace.txt) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - trace.txt
+  DATA-623:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: Verify previous
+          command: |
+            cat /tmp/stage/trace.txt
+      - run:
+          name: Get source tree
+          command: git clone --depth 1 --filter=tree:0 --no-tags https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME.git .
+      - run:
+          name: Extract archive
+          command: tar --extract --xz -f archive.tar.xz
+      - run:
+          name: Store metadata
+          no_output_timeout: 15m
+          command: sleep 90
+      - run:
+          no_output_timeout: 71m
+          command: "./adapter"
+  sys_orion:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: try harder
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; echo abcdef | wc -c; true ; } > /tmp/stage/410.txt
+            echo "gate orion: $(wc -c </tmp/stage/410.txt) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - 410.txt
+  orion:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: Verify previous
+          command: |
+            cat /tmp/stage/410.txt
+      - run:
+          name: Get source tree
+          command: git clone --depth 1 --filter=tree:0 --no-tags https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME.git .
+      - run:
+          name: Extract archive
+          command: tar --extract --xz -f archive.tar.xz
+      - run:
+          name: Store metadata
+          no_output_timeout: 15m
+          command: sleep 90
+      - run:
+          no_output_timeout: 71m
+          command: "./adapter"
+  postbuild_v2-alpha:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: pawprint
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; awk 'BEGIN{s=sprintf("[%5s]","hi"); print s}'; true ; } > /tmp/stage/summary.md
+            echo "gate v2-alpha: $(wc -c </tmp/stage/summary.md) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - summary.md
+  v2-alpha:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: Verify previous
+          command: |
+            cat /tmp/stage/summary.md
+      - run:
+          name: Get source tree
+          command: git clone --depth 1 --filter=tree:0 --no-tags https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME.git .
+      - run:
+          name: Extract archive
+          command: tar --extract --xz -f archive.tar.xz
+      - run:
+          name: Store metadata
+          no_output_timeout: 15m
+          command: sleep 90
+      - run:
+          no_output_timeout: 71m
+          command: "./adapter"
+  drain_add-router:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: monday blues
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; seq 100 110 | awk '{printf "0x%04x\n",$1}'; true ; } > /tmp/stage/73.bin
+            echo "gate add-router: $(wc -c </tmp/stage/73.bin) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - 73.bin
+  add-router:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: Verify previous
+          command: |
+            cat /tmp/stage/73.bin
+      - run:
+          name: Get source tree
+          command: git clone --depth 1 --filter=tree:0 --no-tags https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME.git .
+      - run:
+          name: Extract archive
+          command: tar --extract --xz -f archive.tar.xz
+      - run:
+          name: Store metadata
+          no_output_timeout: 15m
+          command: sleep 90
+      - run:
+          no_output_timeout: 71m
+          command: "./adapter"
+  fixture_hotel:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: mono mode
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; printf "a\nb\nc\nd\ne\n" | nl 2>/dev/null | head -3 || printf "a\nb\nc\nd\ne\n" | awk '{print NR,$0}' | head -3; true ; } > /tmp/stage/2024-01-20.data
+            echo "gate hotel: $(wc -c </tmp/stage/2024-01-20.data) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - 2024-01-20.data
+  hotel:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: Verify previous
+          command: |
+            cat /tmp/stage/.done
+      - run:
+          name: Get source tree
+          command: git clone --depth 1 --filter=tree:0 --no-tags https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME.git .
+      - run:
+          name: Extract archive
+          command: tar --extract --xz -f archive.tar.xz
+      - run:
+          name: Store metadata
+          no_output_timeout: 15m
+          command: sleep 90
+      - run:
+          no_output_timeout: 71m
+          command: "./adapter"
+  checker_validte:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: dryer lint
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; seq 1 500 | tac | head -5; true ; } > /tmp/stage/bundle.bin
+            echo "gate validte: $(wc -c </tmp/stage/bundle.bin) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - bundle.bin
+  validte:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: Verify previous
+          command: |
+            cat /tmp/stage/bundle.bin
+      - run:
+          name: Get source tree
+          command: git clone --depth 1 --filter=tree:0 --no-tags https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME.git .
+      - run:
+          name: Extract archive
+          command: tar --extract --xz -f archive.tar.xz
+      - run:
+          name: Store metadata
+          no_output_timeout: 15m
+          command: sleep 90
+      - run:
+          no_output_timeout: 71m
+          command: "./adapter"
+  provision_tango-4:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - run:
+          name: resolution hint
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; head -c 1024 /dev/urandom | sha1sum | awk '{print $1}'; true ; } > /tmp/stage/2023-02-19.data
+            echo "gate tango-4: $(wc -c </tmp/stage/2023-02-19.data) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - 2023-02-19.data
+  tango-4:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: Verify previous
+          command: |
+            cat /tmp/stage/2023-02-19.data
+      - run:
+          name: Get source tree
+          command: git clone --depth 1 --filter=tree:0 --no-tags https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME.git .
+      - run:
+          name: Extract archive
+          command: tar --extract --xz -f archive.tar.xz
+      - run:
+          name: Store metadata
+          no_output_timeout: 15m
+          command: sleep 90
+      - run:
+          no_output_timeout: 71m
+          command: "./adapter"
+  vendor_sm-01:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: rough edge
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; echo "x" | awk '{for(i=0;i<10;i++)print i}'; true ; } > /tmp/stage/step-pass.out
+            echo "gate sm-01: $(wc -c </tmp/stage/step-pass.out) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - step-pass.out
+  sm-01:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: Verify previous
+          command: |
+            cat /tmp/stage/step-pass.out
+      - run:
+          name: Get source tree
+          command: git clone --depth 1 --filter=tree:0 --no-tags https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME.git .
+      - run:
+          name: Extract archive
+          command: tar --extract --xz -f archive.tar.xz
+      - run:
+          name: Store metadata
+          no_output_timeout: 15m
+          command: sleep 90
+      - run:
+          no_output_timeout: 71m
+          command: "./adapter"
+  phase2_API-447:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: elegy
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; cut -d: -f1 /etc/passwd | sort | uniq -c | head -5; true ; } > /tmp/stage/DONE.txt
+            echo "gate API-447: $(wc -c </tmp/stage/DONE.txt) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - DONE.txt
+  API-447:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: Verify previous
+          command: |
+            cat /tmp/stage/DONE.txt
+      - run:
+          name: Get source tree
+          command: git clone --depth 1 --filter=tree:0 --no-tags https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME.git .
+      - run:
+          name: Extract archive
+          command: tar --extract --xz -f archive.tar.xz
+      - run:
+          name: Store metadata
+          no_output_timeout: 15m
+          command: sleep 90
+      - run:
+          no_output_timeout: 71m
+          command: "./adapter"
+  prebuild_CORE-825:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: nest shape
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; printf "%d\n" $((RANDOM * 17 + 42)); true ; } > /tmp/stage/21b.data
+            echo "gate CORE-825: $(wc -c </tmp/stage/21b.data) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - 21b.data
+  CORE-825:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: Verify previous
+          command: |
+            cat /tmp/stage/21b.data
+      - run:
+          name: Get source tree
+          command: git clone --depth 1 --filter=tree:0 --no-tags https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME.git .
+      - run:
+          name: Extract archive
+          command: tar --extract --xz -f archive.tar.xz
+      - run:
+          name: Store metadata
+          no_output_timeout: 15m
+          command: sleep 90
+      - run:
+          no_output_timeout: 71m
+          command: "./adapter"
+  hydrate_java17-release:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: tennis ball
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; awk 'BEGIN{p=1;for(i=1;i<=2214500;i++)p=(p*i)%1000000007;print p}'; true ; } > /tmp/stage/manifest
+            echo "gate java17-release: $(wc -c </tmp/stage/manifest) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - manifest
+  java17-release:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: Verify previous
+          command: |
+            cat /tmp/stage/manifest
+      - run:
+          name: Get source tree
+          command: git clone --depth 1 --filter=tree:0 --no-tags https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME.git .
+      - run:
+          name: Extract archive
+          command: tar --extract --xz -f archive.tar.xz
+      - run:
+          name: Store metadata
+          no_output_timeout: 15m
+          command: sleep 90
+      - run:
+          no_output_timeout: 71m
+          command: "./adapter"
+  preinit_build-full-docker-image:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: puddle hop
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; ls / | sort | md5sum; true ; } > /tmp/stage/2023-06-18.data
+            echo "gate build-full-docker-image: $(wc -c </tmp/stage/2023-06-18.data) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - 2023-06-18.data
+  build-full-docker-image:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: Verify previous
+          command: |
+            cat /tmp/stage/2023-06-18.data
+      - run:
+          name: Get source tree
+          command: git clone --depth 1 --filter=tree:0 --no-tags https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME.git .
+      - run:
+          name: Extract archive
+          command: tar --extract --xz -f archive.tar.xz
+      - run:
+          name: Store metadata
+          no_output_timeout: 15m
+          command: sleep 90
+      - run:
+          no_output_timeout: 71m
+          command: "./adapter"
+  linter_promote:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - run:
+          name: abaft
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; seq 1 272692 | awk '{if($1%97==0)c++}END{print c}'; true ; } > /tmp/stage/2024-08-27.data
+            echo "gate promote: $(wc -c </tmp/stage/2024-08-27.data) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - 2024-08-27.data
+  promote:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: Verify previous
+          command: |
+            cat /tmp/stage/2024-08-27.data
+      - run:
+          name: Get source tree
+          command: git clone --depth 1 --filter=tree:0 --no-tags https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME.git .
+      - run:
+          name: Extract archive
+          command: tar --extract --xz -f archive.tar.xz
+      - run:
+          name: Store metadata
+          no_output_timeout: 15m
+          command: sleep 90
+      - run:
+          no_output_timeout: 71m
+          command: "./adapter"
+  ctx_jan21-cleanup:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: sanity
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; cat /proc/version 2>/dev/null | head -c 80; true ; } > /tmp/stage/counts.jsonl
+            echo "gate jan21-cleanup: $(wc -c </tmp/stage/counts.jsonl) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - counts.jsonl
+  jan21-cleanup:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: Verify previous
+          command: |
+            cat /tmp/stage/counts.jsonl
+      - run:
+          name: Get source tree
+          command: git clone --depth 1 --filter=tree:0 --no-tags https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME.git .
+      - run:
+          name: Extract archive
+          command: tar --extract --xz -f archive.tar.xz
+      - run:
+          name: Store metadata
+          no_output_timeout: 15m
+          command: sleep 90
+      - run:
+          no_output_timeout: 71m
+          command: "./adapter"
+  wire_atlas-beta:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: drip drip
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; dd if=/dev/urandom bs=512 count=20 2>/dev/null | gzip -9 | wc -c; true ; } > /tmp/stage/step-20.log
+            echo "gate atlas-beta: $(wc -c </tmp/stage/step-20.log) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - step-20.log
+  atlas-beta:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: Verify previous
+          command: |
+            cat /tmp/stage/step-20.log
+      - run:
+          name: Get source tree
+          command: git clone --depth 1 --filter=tree:0 --no-tags https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME.git .
+      - run:
+          name: Extract archive
+          command: tar --extract --xz -f archive.tar.xz
+      - run:
+          name: Store metadata
+          no_output_timeout: 15m
+          command: sleep 90
+      - run:
+          no_output_timeout: 71m
+          command: "./adapter"
+  Gamma_sanity:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: andante
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; head -c 50 /dev/zero | md5sum | awk '{print $1}'; true ; } > /tmp/stage/stage-ready.out
+            echo "gate sanity: $(wc -c </tmp/stage/stage-ready.out) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - stage-ready.out
+  sanity:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: Verify previous
+          command: |
+            cat /tmp/stage/.done
+      - run:
+          name: Get source tree
+          command: git clone --depth 1 --filter=tree:0 --no-tags https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME.git .
+      - run:
+          name: Extract archive
+          command: tar --extract --xz -f archive.tar.xz
+      - run:
+          name: Store metadata
+          no_output_timeout: 15m
+          command: sleep 90
+      - run:
+          no_output_timeout: 71m
+          command: "./adapter"
+  reserve_MERGE_DEV:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: hum
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; ( echo "init"; for i in $(seq 1 23809); do echo "line $i"; done ) | sort | md5sum; true ; } > /tmp/stage/.done
+            echo "gate MERGE_DEV: $(wc -c </tmp/stage/.done) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - .done
+  MERGE_DEV:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: Verify previous
+          command: |
+            cat /tmp/stage/.done
+      - run:
+          name: Get source tree
+          command: git clone --depth 1 --filter=tree:0 --no-tags https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME.git .
+      - run:
+          name: Extract archive
+          command: tar --extract --xz -f archive.tar.xz
+      - run:
+          name: Store metadata
+          no_output_timeout: 15m
+          command: sleep 90
+      - run:
+          no_output_timeout: 71m
+          command: "./adapter"
+  verify_luna-smoke:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: tracks
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; awk 'BEGIN{print 1234567 / 89}'; true ; } > /tmp/stage/checkpoint-A.pickle
+            echo "gate luna-smoke: $(wc -c </tmp/stage/checkpoint-A.pickle) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - checkpoint-A.pickle
+  luna-smoke:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: Verify previous
+          command: |
+            cat /tmp/stage/checkpoint-A.pickle
+      - run:
+          name: Get source tree
+          command: git clone --depth 1 --filter=tree:0 --no-tags https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME.git .
+      - run:
+          name: Extract archive
+          command: tar --extract --xz -f archive.tar.xz
+      - run:
+          name: Store metadata
+          no_output_timeout: 15m
+          command: sleep 90
+      - run:
+          no_output_timeout: 71m
+          command: "./adapter"
+  stepB_papa-9:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - run:
+          name: straight shot
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; awk 'BEGIN{for(i=1;i<=10;i++){s+=1/i} printf "%.4f\n",s}'; true ; } > /tmp/stage/ckpt-E.pt
+            echo "gate papa-9: $(wc -c </tmp/stage/ckpt-E.pt) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - ckpt-E.pt
+  papa-9:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: Verify previous
+          command: |
+            cat /tmp/stage/ckpt-E.pt
+      - run:
+          name: Get source tree
+          command: git clone --depth 1 --filter=tree:0 --no-tags https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME.git .
+      - run:
+          name: Extract archive
+          command: tar --extract --xz -f archive.tar.xz
+      - run:
+          name: Store metadata
+          no_output_timeout: 15m
+          command: sleep 90
+      - run:
+          no_output_timeout: 71m
+          command: "./adapter"
+  hydrate_preview-build:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: steam room
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; awk 'BEGIN{s="encode me well"; cmd=""; for(i=1;i<=length(s);i++){c=substr(s,i,1); cmd=cmd c}; print cmd}'; true ; } > /tmp/stage/artifact
+            echo "gate preview-build: $(wc -c </tmp/stage/artifact) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - artifact
+  preview-build:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: Verify previous
+          command: |
+            cat /tmp/stage/artifact
+      - run:
+          name: Get source tree
+          command: git clone --depth 1 --filter=tree:0 --no-tags https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME.git .
+      - run:
+          name: Extract archive
+          command: tar --extract --xz -f archive.tar.xz
+      - run:
+          name: Store metadata
+          no_output_timeout: 15m
+          command: sleep 90
+      - run:
+          no_output_timeout: 71m
+          command: "./adapter"
+  Beta_raj-run:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: sniff
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; ls -la /proc/self | head -3; true ; } > /tmp/stage/ckpt-alt.pickle
+            echo "gate raj-run: $(wc -c </tmp/stage/ckpt-alt.pickle) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - ckpt-alt.pickle
+  raj-run:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: Verify previous
+          command: |
+            cat /tmp/stage/ckpt-alt.pickle
+      - run:
+          name: Get source tree
+          command: git clone --depth 1 --filter=tree:0 --no-tags https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME.git .
+      - run:
+          name: Extract archive
+          command: tar --extract --xz -f archive.tar.xz
+      - run:
+          name: Store metadata
+          no_output_timeout: 15m
+          command: sleep 90
+      - run:
+          no_output_timeout: 71m
+          command: "./adapter"
+  generate_dotnet8-release:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: blow dry
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; awk 'BEGIN{for(i=0;i<32;i++)if(i%4==0)print i}'; true ; } > /tmp/stage/event.txt
+            echo "gate dotnet8-release: $(wc -c </tmp/stage/event.txt) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - event.txt
+  dotnet8-release:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: Verify previous
+          command: |
+            cat /tmp/stage/.done
+      - run:
+          name: Get source tree
+          command: git clone --depth 1 --filter=tree:0 --no-tags https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME.git .
+      - run:
+          name: Extract archive
+          command: tar --extract --xz -f archive.tar.xz
+      - run:
+          name: Store metadata
+          no_output_timeout: 15m
+          command: sleep 90
+      - run:
+          no_output_timeout: 71m
+          command: "./adapter"
+  wire_jess-ship:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: dry off
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; printf 'a\nb\na\nc\n' | sort -u | wc -l; true ; } > /tmp/stage/result.txt
+            echo "gate jess-ship: $(wc -c </tmp/stage/result.txt) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - result.txt
+  jess-ship:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: Verify previous
+          command: |
+            cat /tmp/stage/result.txt
+      - run:
+          name: Get source tree
+          command: git clone --depth 1 --filter=tree:0 --no-tags https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME.git .
+      - run:
+          name: Extract archive
+          command: tar --extract --xz -f archive.tar.xz
+      - run:
+          name: Store metadata
+          no_output_timeout: 15m
+          command: sleep 90
+      - run:
+          no_output_timeout: 71m
+          command: "./adapter"
+  retry_INIT_STG:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: flag green
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; printf "%s\n" quick brown fox lazy dog | awk '{print length($0), $0}' | sort -n; true ; } > /tmp/stage/gate-ready.out
+            echo "gate INIT_STG: $(wc -c </tmp/stage/gate-ready.out) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - gate-ready.out
+  INIT_STG:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: Verify previous
+          command: |
+            cat /tmp/stage/.done
+      - run:
+          name: Get source tree
+          command: git clone --depth 1 --filter=tree:0 --no-tags https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME.git .
+      - run:
+          name: Extract archive
+          command: tar --extract --xz -f archive.tar.xz
+      - run:
+          name: Store metadata
+          no_output_timeout: 15m
+          command: sleep 90
+      - run:
+          no_output_timeout: 71m
+          command: "./adapter"
+
+  fetch_validte_2:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: lighter flick
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; echo "data1" | od -An -c | head -1; true ; } > /tmp/stage/bundle.bin
+            echo "gate validte: $(wc -c </tmp/stage/bundle.bin) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - bundle.bin
+  postcheck_tango-4_2:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - run:
+          name: dink
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; ( for i in $(seq 1 16098); do printf "%d\n" $i; done ) | sort -n | tail -1; true ; } > /tmp/stage/2023-02-19.data
+            echo "gate tango-4: $(wc -c </tmp/stage/2023-02-19.data) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - 2023-02-19.data
+  prebuild_v2-alpha_2:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: cleat hitch
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; echo 'abc123def456' | grep -o '[a-z]' | sort | uniq | wc -l; true ; } > /tmp/stage/summary.md
+            echo "gate v2-alpha: $(wc -c </tmp/stage/summary.md) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - summary.md
+  prep_promote_2:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - run:
+          name: consonance
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; cat /proc/sys/vm/swappiness 2>/dev/null; true ; } > /tmp/stage/2024-08-27.data
+            echo "gate promote: $(wc -c </tmp/stage/2024-08-27.data) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - 2024-08-27.data
+  beta_atlas-beta_2:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: turks head
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; test 5 -gt 3 && echo gt-ok; true ; } > /tmp/stage/step-20.log
+            echo "gate atlas-beta: $(wc -c </tmp/stage/step-20.log) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - step-20.log
+  canary1_build-nightly-integration-tests_2:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - run:
+          name: warp drive
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; sum /etc/hostname 2>/dev/null | head -1 || cksum /etc/hostname; true ; } > /tmp/stage/output.out
+            echo "gate build-nightly-integration-tests: $(wc -c </tmp/stage/output.out) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - output.out
+  phase_luna-smoke_2:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: sidestep
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; seq 1 450155 | awk '{if($1%2)o++;else e++}END{print o"/"e}'; true ; } > /tmp/stage/checkpoint-A.pickle
+            echo "gate luna-smoke: $(wc -c </tmp/stage/checkpoint-A.pickle) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - checkpoint-A.pickle
+  ensure_CORE-825_2:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: earworm
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; awk 'BEGIN{s="hello"; n=length(s); for(i=1;i<=n;i++)print substr(s,i,1)}' | wc -l; true ; } > /tmp/stage/21b.data
+            echo "gate CORE-825: $(wc -c </tmp/stage/21b.data) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - 21b.data
+  generate_java17-release_2:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: dirge
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; echo "foo bar baz" | awk 'NF==3{print "good"}'; true ; } > /tmp/stage/manifest
+            echo "gate java17-release: $(wc -c </tmp/stage/manifest) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - manifest
+  bake_DATA-623_2:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - run:
+          name: dead calm
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; printf "%s\n" one two three | awk '{print toupper($1)}'; true ; } > /tmp/stage/trace.txt
+            echo "gate DATA-623: $(wc -c </tmp/stage/trace.txt) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - trace.txt
+  g2_jan21-cleanup_2:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: to leeward
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; date +"%A"; true ; } > /tmp/stage/counts.jsonl
+            echo "gate jan21-cleanup: $(wc -c </tmp/stage/counts.jsonl) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - counts.jsonl
+  dispatch_raj-run_2:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: squat light
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; find /etc -maxdepth 1 -type f 2>/dev/null | wc -l; true ; } > /tmp/stage/ckpt-alt.pickle
+            echo "gate raj-run: $(wc -c </tmp/stage/ckpt-alt.pickle) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - ckpt-alt.pickle
+  loader_sm-01_2:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/stage
+      - run:
+          name: scissor jump
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; head -c 2048 /dev/urandom | md5sum | awk '{print $1}'; true ; } > /tmp/stage/step-pass.out
+            echo "gate sm-01: $(wc -c </tmp/stage/step-pass.out) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - step-pass.out
+  g2_papa-9_2:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - run:
+          name: counterbore
+          command: |
+            mkdir -p /tmp/stage
+            { set +o pipefail 2>/dev/null; cat /proc/stat 2>/dev/null | head -1; true ; } > /tmp/stage/ckpt-E.pt
+            echo "gate papa-9: $(wc -c </tmp/stage/ckpt-E.pt) bytes total"
+      - persist_to_workspace:
+          root: /tmp/stage
+          paths:
+            - ckpt-E.pt
+workflows:
+  release:
+    jobs:
+      - checker_validte
+      - fetch_validte_2:
+          requires:
+            - checker_validte
+      - validte:
+          requires:
+            - fetch_validte_2
+      - provision_tango-4:
+          requires:
+            - fetch_validte_2
+      - postcheck_tango-4_2:
+          requires:
+            - provision_tango-4
+      - tango-4:
+          requires:
+            - postcheck_tango-4_2
+      - postbuild_v2-alpha:
+          requires:
+            - postcheck_tango-4_2
+      - prebuild_v2-alpha_2:
+          requires:
+            - postbuild_v2-alpha
+      - v2-alpha:
+          requires:
+            - prebuild_v2-alpha_2
+      - linter_promote:
+          requires:
+            - prebuild_v2-alpha_2
+      - prep_promote_2:
+          requires:
+            - linter_promote
+      - promote:
+          requires:
+            - prep_promote_2
+      - reserve_MERGE_DEV
+      - generate_dotnet8-release
+      - MERGE_DEV:
+          requires:
+            - reserve_MERGE_DEV
+            - generate_dotnet8-release
+      - dotnet8-release:
+          requires:
+            - reserve_MERGE_DEV
+            - generate_dotnet8-release
+      - INIT_STG:
+          requires:
+            - reserve_MERGE_DEV
+            - generate_dotnet8-release
+      - hotel:
+          requires:
+            - reserve_MERGE_DEV
+            - generate_dotnet8-release
+      - sanity:
+          requires:
+            - reserve_MERGE_DEV
+            - generate_dotnet8-release
+      - wire_atlas-beta
+      - beta_atlas-beta_2:
+          requires:
+            - wire_atlas-beta
+      - atlas-beta:
+          requires:
+            - beta_atlas-beta_2
+      - compile_build-nightly-integration-tests:
+          requires:
+            - beta_atlas-beta_2
+      - canary1_build-nightly-integration-tests_2:
+          requires:
+            - compile_build-nightly-integration-tests
+      - build-nightly-integration-tests:
+          requires:
+            - canary1_build-nightly-integration-tests_2
+      - verify_luna-smoke:
+          requires:
+            - canary1_build-nightly-integration-tests_2
+      - phase_luna-smoke_2:
+          requires:
+            - verify_luna-smoke
+      - luna-smoke:
+          requires:
+            - phase_luna-smoke_2
+      - prebuild_CORE-825:
+          requires:
+            - phase_luna-smoke_2
+      - ensure_CORE-825_2:
+          requires:
+            - prebuild_CORE-825
+      - CORE-825:
+          requires:
+            - ensure_CORE-825_2
+      - hydrate_java17-release:
+          requires:
+            - ensure_CORE-825_2
+      - generate_java17-release_2:
+          requires:
+            - hydrate_java17-release
+      - java17-release:
+          requires:
+            - generate_java17-release_2
+      - generate_DATA-623:
+          requires:
+            - generate_java17-release_2
+      - bake_DATA-623_2:
+          requires:
+            - generate_DATA-623
+      - DATA-623:
+          requires:
+            - bake_DATA-623_2
+      - ctx_jan21-cleanup:
+          requires:
+            - bake_DATA-623_2
+      - g2_jan21-cleanup_2:
+          requires:
+            - ctx_jan21-cleanup
+      - jan21-cleanup:
+          requires:
+            - g2_jan21-cleanup_2
+      - wire_jess-ship
+      - jess-ship:
+          requires:
+            - wire_jess-ship
+      - hydrate_BUILD_DEV:
+          requires:
+            - wire_jess-ship
+      - BUILD_DEV:
+          requires:
+            - hydrate_BUILD_DEV
+      - spin_deploy:
+          requires:
+            - hydrate_BUILD_DEV
+      - deploy:
+          requires:
+            - spin_deploy
+      - deps_Prepare_Tests7
+      - Prepare_Tests7:
+          requires:
+            - deps_Prepare_Tests7
+      - A_produce-production-test-matrix:
+          requires:
+            - deps_Prepare_Tests7
+      - produce-production-test-matrix:
+          requires:
+            - A_produce-production-test-matrix
+      - phase2_API-447:
+          requires:
+            - A_produce-production-test-matrix
+      - API-447:
+          requires:
+            - phase2_API-447
+      - deps_send-it:
+          requires:
+            - phase2_API-447
+      - send-it:
+          requires:
+            - deps_send-it
+      - preinit_build-full-docker-image:
+          requires:
+            - deps_send-it
+      - build-full-docker-image:
+          requires:
+            - preinit_build-full-docker-image
+      - sys_orion:
+          requires:
+            - preinit_build-full-docker-image
+      - orion:
+          requires:
+            - sys_orion
+      - hydrate_preview-build:
+          requires:
+            - sys_orion
+      - preview-build:
+          requires:
+            - hydrate_preview-build
+      - drain_add-router:
+          requires:
+            - hydrate_preview-build
+      - add-router:
+          requires:
+            - drain_add-router
+      - Beta_raj-run
+      - dispatch_raj-run_2:
+          requires:
+            - Beta_raj-run
+      - raj-run:
+          requires:
+            - dispatch_raj-run_2
+      - vendor_sm-01:
+          requires:
+            - dispatch_raj-run_2
+      - loader_sm-01_2:
+          requires:
+            - vendor_sm-01
+      - sm-01:
+          requires:
+            - loader_sm-01_2
+      - stepB_papa-9:
+          requires:
+            - loader_sm-01_2
+      - g2_papa-9_2:
+          requires:
+            - stepB_papa-9
+      - papa-9:
+          requires:
+            - g2_papa-9_2
